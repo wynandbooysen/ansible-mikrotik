@@ -1,0 +1,21 @@
+---
+# An Ansible Playbook to update (Lockdown) the default SNMP community 'public' which cannot be deleted
+# Version 1 - 07/01/2017
+#
+# ansible.cfg
+# [paramiko_connection]
+# pty=False
+#
+- name: Mikrotik Update Default SNMP community
+  hosts: mikrotik
+  vars:
+    address_var: x.x.x.x/32
+    community_var: COMMUNITYNAME
+
+  connection: paramiko
+  user: admin
+  gather_facts: no
+  tasks:
+   - name: Updating default SNMP community 'public'
+     raw: /snmp community set [ find default=yes ] addresses={{address_var}} name={{community_var}}
+
