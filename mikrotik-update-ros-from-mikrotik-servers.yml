@@ -1,0 +1,31 @@
+---
+# An Ansible Playbook to mass update the ROS version on MikroTik routers
+# Version 1 - 08/01/2017
+#
+- name: Mikrotik ROS Update
+  hosts: mikrotik
+# serial: 1 # executes one host at a time
+
+  connection: paramiko
+  user: admin
+  gather_facts: no
+  tasks:
+   - name: Check if updates required
+     raw: /system package update check-for-updates
+     register: updatecheck
+
+
+   - name: Run package updates and reboot if needed
+     when: updatecheck.stdout.find('System is already up to date') == -1
+     raw: /system package update download
+     register: download
+     until: download.stdout.find('please reboot router') > -1
+     retries: 3
+     delay: 60
+
+   - name: Reboot the Router if the download is successful
+     when: (updatecheck.stdout.find('System is already up to date') == -1) and (download.stdout.find('please reboot router') > -1)
+     raw: /system reboot
+     register: reboot
+     async: 0
+     poll: 0
